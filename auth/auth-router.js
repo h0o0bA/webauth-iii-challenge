@@ -26,7 +26,9 @@ router.post("/login", (req, res) => {
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        res.status(200).json({ message: `Welcome ${user.username}!` });
+        const token = generateToken(user);
+
+        res.status(200).json({ message: `Welcome ${user.username}!`, token });
       } else {
         res.status(401).json({ message: "Invalid Credentials" });
       }
@@ -35,5 +37,19 @@ router.post("/login", (req, res) => {
       res.status(500).json({ message: "Error logging in!" });
     });
 });
+
+function generateToken(user) {
+  const payload = {
+    subject: user.id, // sub
+    username: user.username
+    // ...any other data
+  };
+  const secret = "keep it secret, keep it safe"; //secret code to verify the token signuture
+  const options = {
+    expiresIn: "8h"
+  };
+
+  return jwt.sign(payload, secret, options);
+}
 
 module.exports = router;
